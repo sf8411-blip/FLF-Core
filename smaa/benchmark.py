@@ -100,9 +100,12 @@ def _select_action(observation: AgentObservation, predicted_performance: float, 
 
 @dataclass
 class LogOnlyAgent:
+    """Stores event identifiers but never consults them to build a self-model."""
+    event_log: list[str] = field(default_factory=list)
     architecture: Architecture = Architecture.LOG_ONLY
     def decide(self, observation, budget):
         budget.consume("agent", 1)
+        self.event_log.append(observation.trial_id)
         return AgentDecision(0.5, True, "unknown", _select_action(observation, 0.5, True), 0.5)
 
 @dataclass
