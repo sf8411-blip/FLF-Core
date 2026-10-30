@@ -71,6 +71,24 @@ class SMAATests(unittest.TestCase):
         with self.assertRaises(ValueError): Capability("bad", 1.2, 3)
     def test_prediction_validation(self):
         with self.assertRaises(ValueError): Prediction("p", "x", 1.2)
+    def test_sqlite_ledger_persists_after_reopen(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "events.db")
+            first = SQLiteEventLedger(path)
+            first.append("test", "actor", 0, {"x": 1})
+            second = SQLiteEventLedger(path)
+            self.assertTrue(second.verify())
+            self.assertEqual(second.read_events()[0].payload, {"x": 1})
+
+    def test_sqlite_ledger_detects_tampering(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "events.db")
+            ledger = SQLiteEventLedger(path)
+            ledger.append("test", "actor", 0, {"x": 1})
+            with sqlite3.connect(path) as connection:
+                connection.execute("UPDATE smaa_events SET payload_json=? WHERE sequence=0", ('{"x":2}',))
+            self.assertFalse(ledger.verify())
+
     def test_claim_requires_registered_owner(self):
         with self.assertRaises(ValueError):
             SMAAEngine("n").add_claim(KnowledgeClaim("k", "x", "missing"), "missing")
