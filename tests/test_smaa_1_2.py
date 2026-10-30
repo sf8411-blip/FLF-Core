@@ -29,6 +29,15 @@ class SMAA12BenchmarkTests(unittest.TestCase):
         self.assertEqual(budget["used"]["environment"], 5)
         self.assertEqual(budget["used"]["evaluator"], 6)
 
+    def test_decision_changes_with_predicted_self_capability(self):
+        low = StateTrackerAgent().decide(self.observation, BudgetMeter(BudgetLimits()))
+        high_observation = AgentObservation(
+            "trial-002", 0.9, ("navigation",), "identity-token-B",
+            ("attempt", "abstain"), {})
+        high = StateTrackerAgent().decide(high_observation, BudgetMeter(BudgetLimits()))
+        self.assertEqual(low.chosen_action, "probe")
+        self.assertEqual(high.chosen_action, "attempt")
+
     def test_target_not_added_to_observation(self):
         run_blinded_trial(LogOnlyAgent(), self.observation, self.target)
         self.assertFalse(hasattr(self.observation, "actual_identity"))
