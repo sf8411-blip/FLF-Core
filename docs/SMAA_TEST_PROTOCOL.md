@@ -1,7 +1,7 @@
 # SMAA 0.1.0 — Test Protocol
 
 ## Software acceptance tests
-Run the unit suite on supported Python versions. It checks membership continuity, private-field rejection, message allow-listing, event tamper detection, self-model-dependent action gating, prediction scoring, social provenance, revision, and process-isolated summaries.
+Run the unit suite on supported Python versions. It checks membership continuity, private-field rejection, message allow-listing, in-memory and SQLite event tamper detection, durable ledger reopen, self-model-dependent action gating, prediction scoring, social provenance, revision, and process-isolated summaries.
 
 ## Scientific evaluation (not yet run)
 Compare under equal compute, memory and communication budgets:
