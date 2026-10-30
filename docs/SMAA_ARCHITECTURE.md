@@ -10,19 +10,19 @@ SMAA is a functional self-modeling subsystem for a digital-cell network. It is n
 - Knowledge provenance: claim owner, evidence references and independent-verification flag.
 - Internal status: bounded resource summaries and declared unknowns.
 - Metacognition: forecasts, resolved outcomes, Brier score and expected calibration error.
-- Agency provenance: events include actor labels and event type.
+- Agency provenance: events include actor labels and event type. Actor labels remain untrusted assertions until authenticated.
 - Self-revision: reasoned model-version increments and explicit assumptions.
 
 ## Information boundary
 The reference provides a spawned process per cell. A child process retains observations and exports only an allow-listed summary. This is process separation, not a hardened sandbox: workers still run with the host user's permissions. Production deployment needs OS/container isolation, authenticated transport, schema validation, quotas and adversarial tests. The parent API independently rejects unknown and private message fields.
 
 ## Audit limitations
-The SHA-256 event chain detects edits relative to a trusted chain head. It does not authenticate actors, prevent complete history replacement, or provide distributed consensus. Actor identifiers are assertions until cryptographically bound to process identities.
+The in-memory and SQLite SHA-256 event chains detect edits relative to a trusted chain head. SQLite adds transactional durable storage and reopen/replay support. Neither ledger authenticates actors, prevents complete history replacement, or provides distributed consensus. Actor identifiers are assertions until cryptographically bound to process identities.
 
 ## Functional self-model versus consciousness
 A working self-model can support identity tracking, action attribution, capability awareness, calibrated prediction and revision. Passing software tests does not demonstrate subjective experience, human-like consciousness, or general intelligence.
 
 ## Completion status
 - Implemented: schemas, network state, membership, capability evidence, public message allow-list, hash-chained event ledger, claim provenance, attempt/abstain policy, prediction scoring and versioned revision.
-- Partial: per-cell process isolation and event history (no hardened sandbox or durable persistence).
+- Partial: per-cell process isolation and durable event history (no hardened sandbox, full model-state snapshot/restore, or cryptographic identity).
 - Not implemented: learned world/self predictive model, causal agency experiments, cryptographic identity, rollback of arbitrary code, autonomous grammar invention, and integration with the GDC experimental engine.
