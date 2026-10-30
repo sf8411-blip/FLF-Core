@@ -94,12 +94,16 @@ class SelfModelAgent(Protocol):
     architecture: Architecture
     def decide(self, observation: AgentObservation, budget: BudgetMeter) -> AgentDecision: ...
 
+def _select_action(observation: AgentObservation, predicted_performance: float, capable: bool) -> str:
+    """Common attempt/abstain policy: first action is demanding, last is fallback."""
+    return observation.candidate_actions[0] if capable and predicted_performance >= 0.5 else observation.candidate_actions[-1]
+
 @dataclass
 class LogOnlyAgent:
     architecture: Architecture = Architecture.LOG_ONLY
     def decide(self, observation, budget):
         budget.consume("agent", 1)
-        return AgentDecision(0.5, True, "unknown", observation.candidate_actions[0], 0.5)
+        return AgentDecision(0.5, True, "unknown", _select_action(observation, 0.5, True), 0.5)
 
 @dataclass
 class FixedSelfReportAgent:
@@ -109,15 +113,17 @@ class FixedSelfReportAgent:
     def decide(self, observation, budget):
         budget.consume("agent", 2)
         capable = bool(set(self.fixed_capabilities).intersection(observation.declared_capabilities))
-        return AgentDecision(0.5, capable, self.fixed_identity, observation.candidate_actions[0], 0.6)
+        return AgentDecision(0.5, capable, self.fixed_identity, _select_action(observation, 0.5, capable), 0.6)
 
 @dataclass
 class StateTrackerAgent:
     architecture: Architecture = Architecture.STATE_TRACKER
     def decide(self, observation, budget):
         budget.consume("agent", 3)
-        return AgentDecision(observation.resource_fraction, bool(observation.declared_capabilities),
-                             observation.identity_evidence, observation.candidate_actions[0], 0.65)
+        capable = bool(observation.declared_capabilities)
+        return AgentDecision(observation.resource_fraction, capable,
+                             observation.identity_evidence,
+                             _select_action(observation, observation.resource_fraction, capable), 0.65)
 
 @dataclass
 class ActiveSMAAAgent:
@@ -132,8 +138,9 @@ class ActiveSMAAAgent:
         budget.consume("agent", 5)
         estimate = min(1.0, max(0.0, observation.resource_fraction + self.performance_bias))
         self.last_prediction = estimate
-        return AgentDecision(estimate, bool(observation.declared_capabilities),
-                             observation.identity_evidence, observation.candidate_actions[0], 0.7)
+        capable = bool(observation.declared_capabilities)
+        return AgentDecision(estimate, capable, observation.identity_evidence,
+                             _select_action(observation, estimate, capable), 0.7)
     def receive_feedback(self, observed_performance: float):
         if self.last_prediction is None:
             raise RuntimeError("feedback cannot be applied before a prediction")
@@ -156,6 +163,8 @@ class TrialMetrics:
 def evaluate_decision(observation, decision, target, budget):
     """Evaluator-only scoring; ground truth is never exposed to the agent."""
     budget.consume("evaluator", 6)
+    if not set(target.action_rewards).issubset(set(observation.candidate_actions)):
+        raise ValueError("evaluator rewards may only cover offered actions")
     if decision.chosen_action not in target.action_rewards:
         raise ValueError("chosen action missing from evaluator reward map")
     if decision.chosen_action not in observation.candidate_actions:
