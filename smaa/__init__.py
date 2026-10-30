@@ -10,7 +10,12 @@ from .complete import (
 )
 from .experiments import RandomizedAssignment, TreatmentEffectEstimate, estimate_randomized_effect, randomize_units
 from .recovery import restore_engine_from_snapshot
-
+from .benchmark import (
+    ActiveSMAAAgent, AgentDecision, AgentObservation, Architecture, BudgetLimits,
+    BudgetMeter, EvaluationTarget, FixedSelfReportAgent, LogOnlyAgent,
+    StateTrackerAgent, TrialMetrics, evaluate_decision, run_blinded_trial,
+    summarize_trials,
+)
 __all__ = [
     "Capability", "CellRecord", "EventLedger", "IsolatedCellProcess",
     "KnowledgeClaim", "SQLiteEventLedger", "Prediction", "SMAAEngine",
@@ -19,4 +24,8 @@ __all__ = [
     "RevisionProposal", "SMAAComplete", "SQLiteSnapshotStore", "estimate_agency",
     "RandomizedAssignment", "TreatmentEffectEstimate", "estimate_randomized_effect",
     "randomize_units", "restore_engine_from_snapshot",
+    "ActiveSMAAAgent", "AgentDecision", "AgentObservation", "Architecture",
+    "BudgetLimits", "BudgetMeter", "EvaluationTarget", "FixedSelfReportAgent",
+    "LogOnlyAgent", "StateTrackerAgent", "TrialMetrics", "evaluate_decision",
+    "run_blinded_trial", "summarize_trials",
 ]
