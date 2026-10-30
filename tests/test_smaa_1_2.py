@@ -17,6 +17,12 @@ class SMAA12BenchmarkTests(unittest.TestCase):
         decision = StateTrackerAgent().decide(self.observation, BudgetMeter(BudgetLimits()))
         self.assertIsInstance(decision, AgentDecision)
 
+    def test_log_only_retains_events_without_adapting(self):
+        agent = LogOnlyAgent()
+        first = agent.decide(self.observation, BudgetMeter(BudgetLimits()))
+        self.assertEqual(agent.event_log, ["trial-001"])
+        self.assertEqual(first.predicted_performance, 0.5)
+
     def test_four_control_arms_are_distinct(self):
         from smaa.benchmark import FixedSelfReportAgent
         agents = [LogOnlyAgent(), FixedSelfReportAgent(), StateTrackerAgent(), ActiveSMAAAgent()]
