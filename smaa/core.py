@@ -1,6 +1,7 @@
 from __future__ import annotations
 import hashlib
 import json
+import sqlite3
 from dataclasses import asdict, dataclass, field
 from multiprocessing import get_context
 from typing import Any
@@ -84,6 +85,63 @@ class EventLedger:
                            event.payload, event.previous_hash) != event.event_hash:
                 return False
             prev = event.event_hash
+        return True
+
+
+class SQLiteEventLedger:
+    """Durable, transactional hash-chained event store backed by SQLite."""
+    def __init__(self, database_path: str):
+        if not database_path:
+            raise ValueError("database_path required")
+        self.database_path = database_path
+        with sqlite3.connect(self.database_path) as connection:
+            connection.execute("""
+                CREATE TABLE IF NOT EXISTS smaa_events (
+                    sequence INTEGER PRIMARY KEY,
+                    event_type TEXT NOT NULL,
+                    actor_id TEXT NOT NULL,
+                    tick INTEGER NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    previous_hash TEXT NOT NULL,
+                    event_hash TEXT NOT NULL UNIQUE
+                )
+            """)
+            connection.commit()
+    def append(self, event_type: str, actor_id: str, tick: int, payload: dict) -> LedgerEvent:
+        if not event_type or not actor_id or tick < 0:
+            raise ValueError("invalid event metadata")
+        payload_json = _canonical(payload)
+        safe_payload = json.loads(payload_json)
+        with sqlite3.connect(self.database_path, timeout=10) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT sequence, event_hash FROM smaa_events ORDER BY sequence DESC LIMIT 1"
+            ).fetchone()
+            sequence = 0 if row is None else row[0] + 1
+            previous_hash = GENESIS_HASH if row is None else row[1]
+            event_hash = _hash_event(sequence, event_type, actor_id, tick, safe_payload, previous_hash)
+            connection.execute(
+                "INSERT INTO smaa_events VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (sequence, event_type, actor_id, tick, payload_json, previous_hash, event_hash),
+            )
+            connection.commit()
+        return LedgerEvent(sequence, event_type, actor_id, tick, safe_payload, previous_hash, event_hash)
+    def read_events(self) -> list[LedgerEvent]:
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                "SELECT sequence, event_type, actor_id, tick, payload_json, previous_hash, event_hash "
+                "FROM smaa_events ORDER BY sequence"
+            ).fetchall()
+        return [LedgerEvent(row[0], row[1], row[2], row[3], json.loads(row[4]), row[5], row[6]) for row in rows]
+    def verify(self) -> bool:
+        previous_hash = GENESIS_HASH
+        for expected_sequence, event in enumerate(self.read_events()):
+            if event.sequence != expected_sequence or event.previous_hash != previous_hash:
+                return False
+            if _hash_event(event.sequence, event.event_type, event.actor_id, event.tick,
+                           event.payload, event.previous_hash) != event.event_hash:
+                return False
+            previous_hash = event.event_hash
         return True
 
 def brier_score(probabilities: list[float], outcomes: list[int]) -> float:
