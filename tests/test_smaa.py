@@ -1,7 +1,10 @@
 import unittest
+import os
+import sqlite3
+import tempfile
 from smaa import (
     Capability, EventLedger, IsolatedCellProcess, KnowledgeClaim, Prediction,
-    SMAAEngine, brier_score, expected_calibration_error,
+    SMAAEngine, SQLiteEventLedger, brier_score, expected_calibration_error,
 )
 
 class SMAATests(unittest.TestCase):
