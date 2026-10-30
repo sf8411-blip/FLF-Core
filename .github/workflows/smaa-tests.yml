@@ -6,6 +6,8 @@ on:
     paths:
       - "smaa/**"
       - "tests/test_smaa.py"
+      - "tests/test_smaa_complete.py"
+      - "tests/test_smaa_1_1.py"
       - ".github/workflows/smaa-tests.yml"
 jobs:
   test:
