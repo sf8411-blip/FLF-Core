@@ -16,6 +16,10 @@ from .benchmark import (
     StateTrackerAgent, TrialMetrics, evaluate_decision, run_blinded_trial,
     summarize_trials,
 )
+from .harness import (
+    Preregistration, TrialRecord, TrialSpec, balanced_random_assignment,
+    preregistration_digest, run_isolated_decision, run_study, write_jsonl,
+)
 __all__ = [
     "Capability", "CellRecord", "EventLedger", "IsolatedCellProcess",
     "KnowledgeClaim", "SQLiteEventLedger", "Prediction", "SMAAEngine",
@@ -28,4 +32,6 @@ __all__ = [
     "BudgetLimits", "BudgetMeter", "EvaluationTarget", "FixedSelfReportAgent",
     "LogOnlyAgent", "StateTrackerAgent", "TrialMetrics", "evaluate_decision",
     "run_blinded_trial", "summarize_trials",
+    "Preregistration", "TrialRecord", "TrialSpec", "balanced_random_assignment",
+    "preregistration_digest", "run_isolated_decision", "run_study", "write_jsonl",
 ]
